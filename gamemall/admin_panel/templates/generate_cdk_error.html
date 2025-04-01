@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成 CDK 错误</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">生成 CDK 错误</h1>
+    <p>生成 CDK 时发生错误：</p>
+    <p>{{ error }}</p>
+    <a href="/admin/cdks/" class="btn btn-primary">返回 CDK 管理</a>
+</div>
+</body>
+</html>

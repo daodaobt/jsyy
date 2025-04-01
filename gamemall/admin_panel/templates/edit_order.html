@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑订单</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">编辑订单</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="state" class="form-label">订单状态</label>
+            <select class="form-select" id="state" name="state">
+                <option value="True" {% if order.state %}selected{% endif %}>已支付</option>
+                <option value="False" {% if not order.state %}selected{% endif %}>未支付</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+        <a href="/admin/orders/" class="btn btn-secondary">取消</a>
+    </form>
+</div>
+</body>
+</html>

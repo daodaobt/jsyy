@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDK管理</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h1 class="mb-4">CDK管理</h1>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>CDK列表</h5>
+                </div>
+                <div class="card-body">
+                    <a href="/admin/cdks/generate/" class="btn btn-success">生成 CDK</a>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>CDK码</th>
+<!--?                            <th>状态</th>-->
+<!--?                            <th>创建时间</th>-->
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for cdk in cdks %}
+                        <tr>
+                            <td>{{ cdk.id }}</td>
+                            <td>{{ cdk.cdk }}</td>
+<!--?                            <td>-->
+<!--?                                {% if cdk.is_used %}-->
+<!--?                                <span class="badge bg-danger">已使用</span>-->
+<!--?                                {% else %}-->
+<!--?                                <span class="badge bg-success">未使用</span>-->
+<!--?                                {% endif %}-->
+<!--?                            </td>-->
+<!--?                            <td>{{ cdk.created_at }}</td>-->
+                            <td>
+                                <a href="/admin/cdks/edit_cdk/{{ cdk.id }}" class="btn btn-sm btn-warning">编辑</a>
+                                <a href="/admin/cdks/delete_cdk/{{ cdk.id }}" class="btn btn-sm btn-danger">删除</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

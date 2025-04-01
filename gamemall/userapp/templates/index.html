@@ -1,0 +1,582 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-US" class="h-100">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>向僵尸开炮 - JS变态版</title>
+    <meta name="csrf-param" content="_csrf">
+    <meta name="csrf-token"
+          content="CwVZhcxR7OQLjNSJLbpNHL-gVLjBiR_q-yVcJ3P7G_tZMGrKmx6nrTrchfoA9iJEjOZm4PPxXdqBTBdhN8Jqzw==">
+
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/public.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="d-flex flex-column" style="height: 100vh;">
+<!-- 导航栏 -->
+<nav class="navbar fixed-top bg- shadow-sm">
+        <a class="navbar-brand" href="#">
+            <img src="{% static 'img/jiangshi.png' %}" alt="向僵尸开炮" height="30" style="margin-top: -5px;">
+        </a>
+        <span class="navbar-text mx-auto" style="margin-top: -5px;">JS变态版手游</span>
+</nav>
+
+<!-- 主要内容区 -->
+<main role="main" class="flex-shrink-0">
+    <div class="">
+        <!-- 模态框 -->
+        <div class="modal fade" id="infoModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">提示</h5>
+                    </div>
+                    <div class="modal-body">
+                        充值后道具直接进入背包，不通过邮件，请给背包留空余位置！！！
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">确认</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!-- 固定操作区 -->
+        <div class="fixed-section"
+             style="position: fixed;
+                top: 56px; /* 紧贴导航栏下方 */
+                width: 100%;
+                height: 200px;
+                z-index: 1000;
+                overflow-y: auto;">
+        <div class="container-xl pt-2"> 
+        <!-- 游戏道具购买区 -->
+            <div class="col-12 col-md-8 mb-4"> <!-- 缩小顶部间距 -->
+                <div class="d-flex align-items-center gap-2"> <!-- 添加底部内边距 -->
+                        <label class="mb-0 me-2" style="white-space: nowrap; flex-shrink: 0;">充值分区:</label> 
+                        <select class="form-control flex-grow-1 w-100"
+            style="min-width: 120px;"> <!-- 紧凑输入框 -->
+                        <option value="1">一区</option>
+                    </select>
+            </div>
+            <div class="col-12 col-md-8 mt-3">
+                <div class="form-group">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="mb-0 me-2" style="flex-shrink: 0;">账号:</label>
+                    <div class="btn-group propBtn flex-grow-1" style="gap: 4px">
+                        <input type="text" class="form-control col-10 col-sm-10" id="account" name="account" required=""
+                               placeholder="输入需要充值的游戏账号">
+                        <button type="button" class="btn btn-outline-info proxy-btn-loading"
+                                style="flex-shrink: 0;" id="getRoleList">
+                                <span class="spinner-border spinner-border-sm proxy-btn-loading-icon" role="status"
+                                      aria-hidden="true"></span>
+                            <span class="proxy-btn-text">获取</span>
+                        </button>
+                    </div>
+                    <small class="form-text text-muted"></small>
+</div></div>
+            </div>
+
+                <!-- 分类选择区域 -->
+                <div class="container-xl mt-0">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="category-scroll-container">
+                                <div class="d-flex flex-nowrap pb-2 category-buttons-wrapper">
+                                    <button class="btn btn-outline-primary active me-3"
+                                            data-category="all"
+                                            onclick="filterProducts('all')">
+                                        全部
+                                    </button>
+                                    {% for category in products %}
+                                    <button class="btn btn-outline-primary me-3"
+                                            data-category="{{ category.id }}"
+                                            onclick="filterProducts('{{ category.id }}')">
+                                        {{ category.category }}
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+        </div>
+    </div>
+
+        <!-- 商品展示区域 -->
+<div class="scrollable-section"
+     style="margin-top: 256px; /* 56px(导航栏) + 200px(固定区) */
+            height: calc(100vh - 256px - 56px); /* 扣除底部导航栏高度 */
+            overflow-y: auto;">
+        <div class="container-xl">
+        <div class="row gx-2" id="itemsContainer">
+            {% for obj in commod %}
+            <div class="col-6 col-md-4 col-lg-3 mb-4" data-category="{{ obj.category_id_id }}">
+                <div class="card h-100">
+                    <img src="/media/{{ obj.commodity_image }}" class="card-img-top" alt="{{ obj.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ obj.name }}</h5>
+                        <p class="card-text">价格: ￥{{ obj.price }}</p>
+                        <!-- 购买按钮 -->
+                        <button class="btn btn-primary btn-block purchase-btn"
+                                data-id="{{ obj.id }}"
+                                data-price="{{ obj.price }}"
+                                data-name="{{ obj.name }}">
+                            立即购买
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+</div>
+    </div>
+
+        <!-- 隐藏表单支付宝跳转 -->
+        <form id="alipayForm" method="post" action="{% url 'alipay_payment' %}" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="commodity_id" id="commodity_id">
+            <input type="hidden" name="account" id="alipay_account">
+        </form>
+    </div>
+</main>
+
+<!-- 订单查询模态框 -->
+<div class="modal fade" id="queryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">订单查询</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="orderQueryForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>账号</label>
+                        <input type="text" class="form-control" id="query_account" name="account" required
+                               placeholder="输入您的账号">
+                    </div>
+                    <button type="button" class="btn btn-info" id="queryBtn">查询订单</button>
+                </form>
+                <div id="orderResults" class="mt-3" style="display: none;">
+                    <h4>订单记录</h4>
+                    <table class="table table-bordered" id="orderTable">
+                        <thead>
+                        <tr>
+                            <th>日期</th>
+                            <th>订单号</th>
+                            <th>状态</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 累充福利模态框 -->
+<div class="modal fade" id="benefitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">累充福利</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="benefitForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>游戏账号</label>
+                        <input type="text" class="form-control" id="benefit_account" name="account" required
+                               placeholder="输入您的游戏账号">
+                    </div>
+                    <button type="button" class="btn btn-info" id="checkBenefitBtn">查询额度</button>
+                </form>
+
+                <div id="benefitResults" class="mt-3" style="display: none;">
+                    <h4>充值额度</h4>
+                    <p>累计充值：<span id="uptotal">0</span> 元</p>
+
+                    <h4 class="mt-3">可领取礼包</h4>
+                    <div class="form-group">
+                        <select class="form-control" id="giftPack">
+                            <option value="">选择礼包</option>
+                            <option value="1">累计满100元 - 礼包A【狂澜荆棘皮肤自选箱】</option>
+                            <option value="2">累计满200元 - 礼包B【狂澜荆棘核心自选箱】</option>
+                            <option value="3">累计满500元 - 礼包C【狂澜荆棘枪械自选箱】</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-success" id="claimGiftBtn">领取</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 引用 jQuery 和 Bootstrap JS -->
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<style>
+
+/* 新增自定义CSS */
+/* 分类滚动容器 */
+.category-scroll-container {
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch; 
+    white-space: nowrap; 
+    scrollbar-width: thin; 
+}
+.category-buttons-wrapper {
+    gap: 0.1rem; 
+    padding: 0 1rem; 
+}
+.btn-outline-primary.me-3 {
+    margin-right: 0.1rem !important;
+    flex-shrink: 0; 
+}
+/* 隐藏滚动条 */
+.category-scroll-container::-webkit-scrollbar {
+    height: 1px;
+    background: #f1f1f1;
+}
+.category-scroll-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 2px;
+}
+
+/* 调整商品展示模块的上边距 */
+.scrollable-section {
+    margin-top: 230px !important;
+}
+
+
+/* 在已有的<style>标签内添加以下代码 */
+.category-buttons-container {
+    gap: 1rem !important; 
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+.category-button {
+    margin: 0 0.5rem 0.5rem 0.5rem !important; 
+    flex-shrink: 0;
+}
+@media (max-width: 576px) {
+    #itemsContainer .col-6 {
+        padding: 0 5px;
+    }
+    .card-title {
+        font-size: 14px;
+    }
+    .card-text {
+        font-size: 12px;
+    }
+    .btn-block {
+        padding: 5px;
+        font-size: 12px;
+    }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate__fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* 按钮激活状态 */
+.btn-outline-primary.active {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white !important;
+    border-color: transparent;
+}
+</style>
+
+<script>
+    // 页面加载时检查 URL 参数
+    window.onload = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentStatus = urlParams.get('payment');
+
+        if (paymentStatus === 'success') {
+            showPaymentModal('充值成功！', 'success');
+        } else if (paymentStatus === 'failure') {
+            showPaymentModal('充值失败，请重试！', 'danger');
+        } else {
+            const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+            modal.show();
+        }
+    };
+
+    // 动态创建并显示模态框
+    function showPaymentModal(message, type) {
+        const modalHtml = `
+            <div class="modal fade" id="paymentStatusModal">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-${type} text-white">
+                            <h5 class="modal-title">提示</h5>
+                        </div>
+                        <div class="modal-body">${message}</div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = new bootstrap.Modal(document.getElementById('paymentStatusModal'));
+        modal.show();
+    }
+
+
+// 自动滚动到激活的分类按钮
+function scrollToActiveCategory() {
+    const activeBtn = document.querySelector('[data-category].active');
+    if (activeBtn) {
+        activeBtn.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+        });
+    }
+}
+    // 获取账号按钮点击事件
+    $(document).ready(function () {
+        $('#getRoleList').click(function () {
+            var account = $('#account').val();
+
+            $(this).prop('disabled', true);
+            $(this).find('.proxy-btn-loading-icon').show();
+            $(this).find('.proxy-btn-text').text('处理中...');
+
+            $.ajax({
+                url: '/activate-account/', 
+                type: 'POST',
+                data: {
+                    'account': account,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}' 
+                },
+                success: function (response) {
+                    let message = response.message || response.error; 
+                    if (message) {
+                        alert(message);  
+                    }
+                    $('#getRoleList').prop('disabled', false);
+                    $('#getRoleList').find('.proxy-btn-loading-icon').hide();
+                    $('#getRoleList').find('.proxy-btn-text').text('获取');
+                },
+                error: function (xhr, status, error) {
+                    let response = JSON.parse(xhr.responseText); 
+                    let message = response.message || response.error; 
+                    if (message) {
+                        alert(message); 
+                    }
+                    $('#getRoleList').prop('disabled', false);
+                    $('#getRoleList').find('.proxy-btn-loading-icon').hide();
+                    $('#getRoleList').find('.proxy-btn-text').text('获取');
+                }
+            });
+        });
+    });
+
+
+    // 订单查询功能
+    document.getElementById('queryBtn').addEventListener('click', function () {
+        const account = document.getElementById('query_account').value;
+
+        if (!account || !/^\d{11,}$/.test(account)) {
+            alert('请输入有效的数字账号');
+            return;
+        }
+
+        fetch(`/order-query/?account=${account}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw err;
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const resultsDiv = document.getElementById('orderResults');
+                    resultsDiv.style.display = 'block';
+
+                    const tbody = document.querySelector('#orderTable tbody');
+                    tbody.innerHTML = '';
+
+                    data.orders.forEach(order => {
+                        const row = `
+                        <tr>
+                            <td>${order.time}</td>
+                            <td>${order.order_number}</td>
+                            <td>${order.state}</td>
+                        </tr>
+                    `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(error => {
+                    alert(error.error || '查询失败，请重试！');
+                });
+    });
+
+    // 充值福利查询功能
+    document.getElementById('checkBenefitBtn').addEventListener('click', function () {
+        const account = document.getElementById('benefit_account').value;
+
+        if (!/^\d{11}$/.test(account)) {
+            alert('请输入11位有效数字账号！');
+            return;
+        }
+
+        fetch(`/check-benefit/?account=${account}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || '请求失败');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('benefitResults').style.display = 'block';
+                        document.getElementById('uptotal').textContent = data.uptotal;
+                    } else {
+                        alert(data.error || '未知错误');
+                    }
+                })
+                .catch(error => {
+                    alert(error.message || '网络请求异常');
+                });
+    });
+
+    // 礼包领取功能
+    document.getElementById('claimGiftBtn').addEventListener('click', function () {
+        const giftId = document.getElementById('giftPack').value;
+        const account = document.getElementById('benefit_account').value;
+        const uptotal = parseFloat(document.getElementById('uptotal').textContent);
+
+        fetch('/claim-gift/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token }}' 
+            },
+            body: new URLSearchParams({
+                'gift_id': giftId,
+                'account': account,
+                'uptotal': uptotal
+            })
+        })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert('失败: ' + data.message);
+                    }
+                })
+                .catch(error => alert('网络错误'));
+    });
+
+
+    // 商品筛选函数
+    function filterProducts(categoryId) {
+        const items = document.querySelectorAll('#itemsContainer [data-category]');
+        const buttons = document.querySelectorAll('[data-category]');
+
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.category === categoryId) {
+                btn.classList.add('active');
+            }
+        });
+
+        items.forEach(item => {
+            if (categoryId === 'all' || item.dataset.category === categoryId) {
+                item.style.display = 'block';
+                item.classList.add('animate__animated', 'animate__fadeIn');
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        scrollToActiveCategory();
+    }
+
+    // 购买按钮点击事件
+    document.querySelectorAll('.purchase-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const commodityId = this.dataset.id;
+            const commodityPrice = this.dataset.price;
+            const commodityName = this.dataset.name;
+
+            const account = document.getElementById('account').value;
+
+            if (!/^\d{11}$/.test(account)) {
+                alert('请输入11位有效数字账号');
+                return;
+            }
+
+            const confirmPurchase = confirm(`确认购买 ${commodityName}（￥${commodityPrice}）？`);
+            if (confirmPurchase) {
+                document.getElementById('commodity_id').value = commodityId;
+                document.getElementById('alipay_account').value = account;
+
+                document.getElementById('alipayForm').submit();
+            }
+        });
+    });
+</script>
+<!-- 底部导航栏 -->
+<footer class="fixed-bottom bg-white shadow-sm py-2" style="z-index: 1030;">
+    <div class="row g-2">
+        <div class="col-6">
+            <button
+                class="btn btn-primary w-100 h-100 rounded-pill d-flex align-items-center justify-content-center"
+                id="showOrdersBtn"
+                data-toggle="modal"
+                data-target="#queryModal"
+                style="background: linear-gradient(135deg, #6a11cb, #2575fc); border: none;"
+            >
+                <i class="bi bi-receipt me-2"></i>
+                <span>订单查询</span>
+            </button>
+        </div>
+
+        <div class="col-6">
+            <button
+                class="btn btn-primary w-100 h-100 rounded-pill d-flex align-items-center justify-content-center"
+                id="showBenefitsBtn"
+                data-toggle="modal"
+                data-target="#benefitModal"
+                style="background: linear-gradient(135deg, #6a11cb, #2575fc); border: none;"
+            >
+                <i class="bi bi-gift me-2"></i>
+                <span>累充福利</span>
+            </button>
+        </div>
+    </div>
+</footer>
+</body>
+</html>

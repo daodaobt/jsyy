@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  init_static:
+    image: busybox
+    command: sh -c "chmod -R 755 /app/static && chown -R 101:101 /app/static"
+    volumes:
+      - static_volume:/app/static
+    networks:
+      - gamemall_network
+
+  mysql8:
+    image: mysql:8.0.41
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    environment:
+      MYSQL_ROOT_PASSWORD: cnm471787
+      MYSQL_DATABASE: gamemall
+    volumes:
+      - mysql8_data:/var/lib/mysql
+      - ./reset_password.sql:/docker-entrypoint-initdb.d/reset_password.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - gamemall_network
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - static_volume:/app/static
+      - ./media:/app/media  # 绑定挂载到宿主机目录
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      web:
+        condition: service_started
+    networks:
+      - gamemall_network
+
+  web:
+    build: .
+    command: |
+      bash -c "
+      chmod -R 777 /app/media &&
+      /app/wait-for-it.sh mysql8:3306 --timeout=60 --strict -- &&
+      python manage.py migrate --no-input &&
+      python manage.py collectstatic --no-input &&
+      gunicorn gamemall.wsgi:application --bind 0.0.0.0:8000 --workers 4 --access-logfile - --error-logfile - --log-level debug
+      "
+    volumes:
+      - static_volume:/app/static
+      - ./media:/app/media  # 绑定挂载到宿主机目录
+      - .:/app
+    depends_on:
+      mysql8:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      init_static:
+        condition: service_completed_successfully  # 添加条件
+    networks:
+      - gamemall_network
+
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - gamemall_network
+  # 新增Celery Worker服务
+  celery_worker:
+    build: .  # 使用与web服务相同的Dockerfile
+    command: celery -A gamemall.celery worker --loglevel=info --concurrency=4
+    depends_on:
+      - redis
+      - mysql8
+    volumes:
+      - .:/app  
+      - static_volume:/app/static
+      - ./media:/app/media
+    environment:
+      - DJANGO_SETTINGS_MODULE=gamemall.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - gamemall_network
+
+  # 新增Celery Beat服务（定时任务）
+  celery_beat:
+    build: .
+    command: celery -A gamemall.celery beat --loglevel=info
+    depends_on:
+      - redis
+      - mysql8
+    volumes:
+      - .:/app  
+      - static_volume:/app/static
+      - ./media:/app/media
+    environment:
+      - DJANGO_SETTINGS_MODULE=gamemall.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    networks:
+      - gamemall_network
+
+volumes:
+  mysql8_data:
+  static_volume:
+  redis_data:
+
+networks:
+  gamemall_network:
+    driver: bridge
